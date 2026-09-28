@@ -389,12 +389,20 @@ struct ContentView: View {
                                 Label("Import from YouTube or Hugging Face...", systemImage: "globe")
                             }
                         } label: {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.system(size: 16))
-                                .foregroundStyle(Color.accentColor)
+                            Image(systemName: "plus")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(Color.primary.opacity(0.85))
+                                .frame(width: 22, height: 22)
+                                .background(Color(nsColor: .controlBackgroundColor))
+                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .stroke(Color(nsColor: .separatorColor), lineWidth: 0.6)
+                                )
                         }
                         .menuStyle(.borderlessButton)
-                        .frame(width: 20)
+                        .menuIndicator(.hidden)
+                        .frame(width: 24, height: 24)
                         .help("Add voice profile from audio file, folder dataset, or online link")
                     }
                 }
