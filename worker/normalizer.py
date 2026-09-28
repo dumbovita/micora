@@ -36,7 +36,10 @@ def int_to_turkish(n: int) -> str:
 
     units = ["", "bir", "iki", "üç", "dört", "beş", "altı", "yedi", "sekiz", "dokuz"]
     tens = ["", "on", "yirmi", "otuz", "kırk", "elli", "altmış", "yetmiş", "seksen", "doksan"]
-    scales = ["", "bin", "milyon", "milyar", "trilyon"]
+    scales = [
+        "", "bin", "milyon", "milyar", "trilyon",
+        "katrilyon", "kentilyon", "sekstilyon", "septilyon"
+    ]
 
     if n < 0:
         return "eksi " + int_to_turkish(abs(n))
@@ -69,11 +72,13 @@ def int_to_turkish(n: int) -> str:
                     c_parts.append(units[u])
 
             chunk_str = " ".join(c_parts)
-            if chunk_idx > 0 and scales[chunk_idx]:
-                if chunk_str:
-                    chunk_str = f"{chunk_str} {scales[chunk_idx]}"
-                else:
-                    chunk_str = scales[chunk_idx]
+            if chunk_idx > 0:
+                scale_name = scales[chunk_idx] if chunk_idx < len(scales) else ""
+                if scale_name:
+                    if chunk_str:
+                        chunk_str = f"{chunk_str} {scale_name}"
+                    else:
+                        chunk_str = scale_name
 
             parts.insert(0, chunk_str)
 
@@ -798,7 +803,10 @@ def normalize_turkish_numbers(text: str) -> str:
 
     # 18. Remaining standalone integers: 30 -> otuz, 123 -> yüz yirmi üç, 2026 -> iki bin yirmi altı
     def repl_int(m: re.Match) -> str:
-        return int_to_turkish(int(m.group(0)))
+        s = m.group(0)
+        if (s.startswith("0") and len(s) > 1) or len(s) > 12:
+            return digits_to_turkish(s)
+        return int_to_turkish(int(s))
 
     text = re.sub(r"\b\d+\b", repl_int, text)
 
@@ -953,7 +961,10 @@ def normalize_english_numbers(text: str) -> str:
 
     # Standalone integers
     def repl_int(m: re.Match) -> str:
-        return int_to_english(int(m.group(0)))
+        s = m.group(0)
+        if (s.startswith("0") and len(s) > 1) or len(s) > 12:
+            return digits_to_english(s)
+        return int_to_english(int(s))
 
     text = re.sub(r"\b\d+\b", repl_int, text)
 
