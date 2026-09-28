@@ -163,6 +163,7 @@ public final class AppState: ObservableObject {
     }
 
     public func clearQueue() {
+        self.queueItems.removeAll()
         Task {
             await queue?.clearQueue()
         }

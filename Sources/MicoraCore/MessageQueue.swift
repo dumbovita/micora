@@ -133,7 +133,7 @@ public actor MessageQueue {
         notifyChange()
     }
 
-    /// Clears the entire queue and stops active speech immediately.
+    /// Clears the entire queue, stops active speech immediately, and empties the queue list.
     public func clearQueue() {
         if let currentId = activeItemId {
             try? client.cancel(requestId: currentId)
@@ -142,12 +142,8 @@ public actor MessageQueue {
             isCurrentCancelled = true
         }
 
-        for i in 0..<itemsList.count {
-            if itemsList[i].state == .queued || itemsList[i].state == .generating || itemsList[i].state == .speaking {
-                itemsList[i].state = .cancelled
-            }
-        }
         activeItemId = nil
+        itemsList.removeAll()
         notifyChange()
     }
 

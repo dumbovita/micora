@@ -543,6 +543,9 @@ struct ContentView: View {
                                 .font(.caption)
                         }
                         .foregroundStyle(.secondary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .help("Clear completed and queued messages")
