@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -e
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BIN="$DIR/.build/debug/micora-app"
+
+NEEDS_BUILD=0
+
+if [ ! -f "$BIN" ]; then
+    NEEDS_BUILD=1
+else
+    # Find any source file or Package.swift newer than the binary
+    NEWEST_SRC=$(find "$DIR/Package.swift" "$DIR/Sources" -type f \( -name "*.swift" -o -name "*.c" -o -name "*.h" \) -newer "$BIN" 2>/dev/null | head -n 1)
+    if [ -n "$NEWEST_SRC" ]; then
+        NEEDS_BUILD=1
+    fi
+fi
+
+if [ "$NEEDS_BUILD" -eq 1 ]; then
+    echo "Changes detected, compiling micora-app..."
+    swift build --product micora-app
+fi
+
+exec "$BIN" "$@"
