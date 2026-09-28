@@ -1,0 +1,77 @@
+{
+  "references": [
+    {
+      "name": "MOSS-TTS-Nano",
+      "origin": "GitHub",
+      "repository_url": "https://github.com/OpenMOSS/MOSS-TTS-Nano.git",
+      "commit": "8b7bcc9341b3b4ef3a3a58ba1338a7d85ff133eb",
+      "retrieval_date": "2026-09-16",
+      "license": "Apache-2.0",
+      "description": "Upstream reference codebase for MOSS-TTS-Nano architecture and ONNX runtime."
+    },
+    {
+      "name": "MOSS-TTS-Nano-100M-ONNX",
+      "origin": "Hugging Face",
+      "repository_url": "https://huggingface.co/OpenMOSS-Team/MOSS-TTS-Nano-100M-ONNX",
+      "retrieval_date": "2026-09-16",
+      "license": "Apache-2.0",
+      "description": "Pre-exported ONNX weights, prefill, decode_step, local_decoder graphs, and tokenizer model."
+    },
+    {
+      "name": "MOSS-Audio-Tokenizer-Nano-ONNX",
+      "origin": "Hugging Face",
+      "repository_url": "https://huggingface.co/OpenMOSS-Team/MOSS-Audio-Tokenizer-Nano-ONNX",
+      "retrieval_date": "2026-09-16",
+      "license": "Apache-2.0",
+      "description": "Pre-exported ONNX codec encoder and decoder graphs for 48kHz audio."
+    },
+    {
+      "name": "BlackHole",
+      "origin": "GitHub",
+      "repository_url": "https://github.com/ExistentialAudio/BlackHole.git",
+      "commit": "ffcb74433fbcf8c8ca5c736677c1a4864384dc09",
+      "version": "0.7.1",
+      "retrieval_date": "2026-09-16",
+      "license": "GPL-3.0",
+      "description": "Virtual audio driver reference for CoreAudio loopback and microphone emulation."
+    },
+    {
+      "name": "mlx-audio",
+      "origin": "GitHub",
+      "repository_url": "https://github.com/Blaizzy/mlx-audio.git",
+      "commit": "2c9461f5d8315fa8e7013ab2729495b2bb83d384",
+      "version": "0.4.7",
+      "retrieval_date": "2026-09-16",
+      "license": "MIT",
+      "description": "Apple Silicon MLX audio inference library containing Chatterbox Multilingual V3 implementation, S3Gen flow matching decoder, and VoiceEncoder."
+    },
+    {
+      "name": "chatterbox",
+      "origin": "GitHub",
+      "repository_url": "https://github.com/resemble-ai/chatterbox.git",
+      "commit": "5de7a54aa4e5e2baadb0182dde554908b48b85c2",
+      "version": "0.1.2",
+      "retrieval_date": "2026-09-16",
+      "license": "Apache-2.0",
+      "description": "Upstream reference codebase for Chatterbox TTS architecture by Resemble AI."
+    },
+    {
+      "name": "chatterbox-multilingual-v3",
+      "origin": "Hugging Face",
+      "repository_url": "https://huggingface.co/mlx-community/chatterbox-multilingual-v3",
+      "commit": "03565773edd72e949572557597af8063bb49a18a",
+      "retrieval_date": "2026-09-16",
+      "license": "Apache-2.0",
+      "description": "Pre-converted MLX weights for Chatterbox Multilingual V3 (0.5B Llama-3 backbone, 23 languages including Turkish)."
+    },
+    {
+      "name": "S3TokenizerV2",
+      "origin": "Hugging Face",
+      "repository_url": "https://huggingface.co/mlx-community/S3TokenizerV2",
+      "commit": "e0c9886f0e1c35ae85b1f27277416fb19fc72bec",
+      "retrieval_date": "2026-09-16",
+      "license": "Apache-2.0",
+      "description": "Pre-converted MLX weights for S3TokenizerV2 25Hz speech tokenizer required by Chatterbox."
+    }
+  ]
+}
