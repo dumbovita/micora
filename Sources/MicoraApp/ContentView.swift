@@ -37,7 +37,7 @@ struct ContentView: View {
             queueSection
         }
         .padding(18)
-        .frame(minWidth: 720, minHeight: 560)
+        .frame(minWidth: 720, minHeight: 540)
         .background(Color(nsColor: .windowBackgroundColor))
         .onAppear {
             NSApp.activate(ignoringOtherApps: true)
@@ -100,39 +100,13 @@ struct ContentView: View {
 
     private var headerBar: some View {
         HStack(alignment: .center, spacing: 12) {
-            // Brand Logo & Title
-            HStack(spacing: 10) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(
-                            LinearGradient(
-                                colors: [Color.blue, Color.cyan],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 32, height: 32)
-                    Image(systemName: "waveform")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundStyle(.white)
-                }
-
-                VStack(alignment: .leading, spacing: 1) {
-                    HStack(spacing: 6) {
-                        Text("Micora")
-                            .font(.system(size: 16, weight: .bold))
-                        Text("v1.0")
-                            .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 1)
-                            .background(Color.primary.opacity(0.06))
-                            .foregroundStyle(.secondary)
-                            .clipShape(Capsule())
-                    }
-                    Text("Local-First Virtual Microphone TTS")
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                }
+            // Clean Typography Title
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Micora")
+                    .font(.system(size: 16, weight: .bold))
+                Text("Local-First Virtual Microphone TTS")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
             }
 
             Spacer()
@@ -145,9 +119,6 @@ struct ContentView: View {
                     Circle()
                         .fill(appState.isVirtualMicAvailable ? Color.green : Color.orange)
                         .frame(width: 7, height: 7)
-                    Image(systemName: appState.isVirtualMicAvailable ? "mic.fill" : "speaker.wave.2.fill")
-                        .font(.system(size: 11))
-                        .foregroundStyle(appState.isVirtualMicAvailable ? .green : .orange)
                     Text(appState.isVirtualMicAvailable ? "Virtual Mic: BlackHole" : appState.primaryDeviceName)
                         .font(.system(size: 12, weight: .medium))
                     Image(systemName: "chevron.right")
@@ -155,7 +126,7 @@ struct ContentView: View {
                         .foregroundStyle(.tertiary)
                 }
                 .padding(.horizontal, 10)
-                .padding(.vertical, 6)
+                .padding(.vertical, 5)
                 .background(Color(nsColor: .controlBackgroundColor))
                 .clipShape(Capsule())
                 .overlay(
@@ -181,7 +152,7 @@ struct ContentView: View {
                     .foregroundStyle(.secondary)
             }
             .padding(.horizontal, 10)
-            .padding(.vertical, 6)
+            .padding(.vertical, 5)
             .background(Color(nsColor: .controlBackgroundColor))
             .clipShape(Capsule())
             .overlay(
@@ -194,20 +165,15 @@ struct ContentView: View {
     // MARK: - Virtual Microphone Banner
 
     private var virtualMicBanner: some View {
-        HStack(spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(Color.orange.opacity(0.2))
-                    .frame(width: 28, height: 28)
-                Image(systemName: "mic.slash.fill")
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(.orange)
-            }
+        HStack(spacing: 10) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 13))
+                .foregroundStyle(.orange)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text("Virtual Microphone (BlackHole 2ch) Not Detected")
                     .font(.system(size: 12, weight: .semibold))
-                Text("Audio is currently playing to physical speakers. To stream into Discord, Zoom, or games, install BlackHole 2ch.")
+                Text("Audio is playing to physical speakers. To stream into Discord, Zoom, or games, install BlackHole 2ch.")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
@@ -230,13 +196,13 @@ struct ContentView: View {
             .controlSize(.small)
             .help("Check for BlackHole again")
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 9)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
         .background(Color.orange.opacity(0.08))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
         .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color.orange.opacity(0.3), lineWidth: 0.8)
         )
     }
 
@@ -278,25 +244,18 @@ struct ContentView: View {
 
     private var composerCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            // Input Text Field
-            HStack(alignment: .top, spacing: 10) {
-                Image(systemName: "quote.bubble")
-                    .font(.system(size: 15))
-                    .foregroundStyle(Color.accentColor.opacity(0.8))
-                    .padding(.top, 3)
-
-                TextField(
-                    "Type a message in Turkish or English and press Enter to speak...",
-                    text: $appState.inputText,
-                    axis: .vertical
-                )
-                .lineLimit(1...4)
-                .textFieldStyle(.plain)
-                .font(.system(size: 14))
-                .focused($isFieldFocused)
-                .onSubmit {
-                    appState.submit()
-                }
+            // Clean Text Input
+            TextField(
+                "Type a message in Turkish or English and press Enter to speak...",
+                text: $appState.inputText,
+                axis: .vertical
+            )
+            .lineLimit(1...4)
+            .textFieldStyle(.plain)
+            .font(.system(size: 14))
+            .focused($isFieldFocused)
+            .onSubmit {
+                appState.submit()
             }
             .padding(.horizontal, 14)
             .padding(.top, 12)
@@ -308,19 +267,15 @@ struct ContentView: View {
             HStack(alignment: .center) {
                 // Voice and Mode Context Tags
                 HStack(spacing: 6) {
-                    HStack(spacing: 5) {
-                        Image(systemName: "person.wave.2.fill")
-                            .font(.system(size: 10))
-                        Text(currentVoiceName)
-                            .font(.system(size: 11, weight: .medium))
-                    }
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(Color.primary.opacity(0.05))
-                    .clipShape(Capsule())
+                    Text(currentVoiceName)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color.primary.opacity(0.05))
+                        .clipShape(Capsule())
 
-                    Text(appState.synthesisMode == .efficient ? "⚡ MOSS" : "🎙️ Chatterbox")
+                    Text(appState.synthesisMode == .efficient ? "MOSS" : "Chatterbox")
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(appState.synthesisMode == .efficient ? Color.blue : Color.purple)
                         .padding(.horizontal, 7)
@@ -359,7 +314,7 @@ struct ContentView: View {
                         }
                         .buttonStyle(.plain)
                         .keyboardShortcut(".", modifiers: [.command])
-                        .help("Stop active speech (⌘.)")
+                        .help("Stop active speech")
                     }
 
                     Button(action: {
@@ -463,11 +418,11 @@ struct ContentView: View {
                             }
                         }
                     )) {
-                        Text("⚡ Efficient").tag(SynthesisMode.efficient)
-                        Text("🎙️ Natural").tag(SynthesisMode.natural)
+                        Text("Efficient").tag(SynthesisMode.efficient)
+                        Text("Natural").tag(SynthesisMode.natural)
                     }
                     .pickerStyle(.segmented)
-                    .frame(width: 160)
+                    .frame(width: 150)
                     .disabled(appState.isSwitchingMode || !appState.isWorkerReady)
                 }
             }
@@ -596,27 +551,19 @@ struct ContentView: View {
 
             // Queue Content
             if appState.queueItems.isEmpty {
-                VStack(spacing: 6) {
+                VStack(spacing: 4) {
                     Spacer()
-                    Image(systemName: "waveform.and.mic")
-                        .font(.system(size: 28))
-                        .foregroundStyle(.quaternary)
-                    Text("Ready to speak")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.secondary)
-                    Text("Type a message above and press Enter to stream through your virtual microphone.")
-                        .font(.caption)
+                    Text("No messages in queue")
+                        .font(.system(size: 13))
                         .foregroundStyle(.tertiary)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: 380)
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color(nsColor: .controlBackgroundColor).opacity(0.4))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .background(Color(nsColor: .controlBackgroundColor).opacity(0.3))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color(nsColor: .separatorColor).opacity(0.3), lineWidth: 0.8)
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color(nsColor: .separatorColor).opacity(0.3), lineWidth: 0.6)
                 )
             } else {
                 ScrollView {
@@ -627,11 +574,11 @@ struct ContentView: View {
                     }
                     .padding(4)
                 }
-                .background(Color(nsColor: .controlBackgroundColor).opacity(0.4))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .background(Color(nsColor: .controlBackgroundColor).opacity(0.3))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color(nsColor: .separatorColor).opacity(0.35), lineWidth: 0.8)
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color(nsColor: .separatorColor).opacity(0.3), lineWidth: 0.6)
                 )
             }
         }
@@ -721,16 +668,7 @@ struct ContentView: View {
 
     private var newVoiceSheet: some View {
         VStack(spacing: 16) {
-            HStack(spacing: 10) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.blue.opacity(0.15))
-                        .frame(width: 36, height: 36)
-                    Image(systemName: "mic.badge.plus")
-                        .font(.system(size: 18))
-                        .foregroundStyle(.blue)
-                }
-
+            HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Add Voice Profile")
                         .font(.headline)
@@ -795,20 +733,11 @@ struct ContentView: View {
 
     private var datasetCandidatesSheet: some View {
         VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 10) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.purple.opacity(0.15))
-                        .frame(width: 36, height: 36)
-                    Image(systemName: "folder.badge.gearshape")
-                        .font(.system(size: 18))
-                        .foregroundStyle(.purple)
-                }
-
+            HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Import Voice Dataset")
                         .font(.headline)
-                    Text("Select the cleanest reference audio candidate from your folder")
+                    Text("Select reference audio candidate from your folder")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
@@ -817,15 +746,15 @@ struct ContentView: View {
 
             if let res = appState.datasetScanResult {
                 HStack(spacing: 12) {
-                    Label("\(res.total_files ?? 0) Files Scanned", systemImage: "doc.on.doc")
+                    Text("\(res.total_files ?? 0) Files Scanned")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Text("•").foregroundStyle(.tertiary)
-                    Label("\(res.usable_count ?? 0) Usable", systemImage: "checkmark.circle")
+                    Text("\(res.usable_count ?? 0) Usable")
                         .font(.caption)
                         .foregroundStyle(.green)
                     Text("•").foregroundStyle(.tertiary)
-                    Label("\(res.rejected_count ?? 0) Filtered", systemImage: "xmark.circle")
+                    Text("\(res.rejected_count ?? 0) Filtered")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Spacer()
@@ -842,7 +771,7 @@ struct ContentView: View {
                         .textFieldStyle(.roundedBorder)
                 }
 
-                Text("Select Reference Candidate (Top Speech Segments):")
+                Text("Select Reference Candidate:")
                     .font(.caption)
                     .fontWeight(.medium)
 
@@ -929,20 +858,11 @@ struct ContentView: View {
 
     private var hfImportSheet: some View {
         VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 10) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.red.opacity(0.12))
-                        .frame(width: 36, height: 36)
-                    Image(systemName: "globe")
-                        .font(.system(size: 18))
-                        .foregroundStyle(.red)
-                }
-
+            HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Import from YouTube or Hugging Face")
                         .font(.headline)
-                    Text("Automatically downloads, extracts, and isolates clean speech")
+                    Text("Downloads, extracts, and isolates clean speech")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
@@ -996,20 +916,11 @@ struct ContentView: View {
 
     private var virtualMicSetupSheet: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack(spacing: 10) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(appState.isVirtualMicAvailable ? Color.green.opacity(0.15) : Color.orange.opacity(0.15))
-                        .frame(width: 36, height: 36)
-                    Image(systemName: appState.isVirtualMicAvailable ? "mic.fill" : "mic.badge.xmark")
-                        .font(.system(size: 18))
-                        .foregroundStyle(appState.isVirtualMicAvailable ? .green : .orange)
-                }
-
+            HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Virtual Microphone & Audio Routing")
                         .font(.headline)
-                    Text(appState.isVirtualMicAvailable ? "BlackHole 2ch is active and ready for live calls." : "BlackHole 2ch is required to act as a virtual microphone in other apps.")
+                    Text(appState.isVirtualMicAvailable ? "BlackHole 2ch is active and ready." : "BlackHole 2ch is required to act as a virtual microphone.")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
