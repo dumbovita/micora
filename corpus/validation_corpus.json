@@ -1,0 +1,162 @@
+{
+  "corpus_version": "1.0",
+  "language": "tr",
+  "secondary_language": "en",
+  "samples": [
+    {
+      "id": "casual_01",
+      "category": "casual_conversational",
+      "text": "Selam, naber? Akşama oyunda mısın?"
+    },
+    {
+      "id": "casual_02",
+      "category": "casual_conversational",
+      "text": "Evet geliyorum, Discord'dayım şu an, ses kanalına geçiyorum."
+    },
+    {
+      "id": "short_01",
+      "category": "short_expressions",
+      "text": "Tamamdır."
+    },
+    {
+      "id": "short_02",
+      "category": "short_expressions",
+      "text": "Aynen öyle, katılıyorum."
+    },
+    {
+      "id": "short_03",
+      "category": "short_expressions",
+      "text": "Görüşürüz, kendine iyi bak!"
+    },
+    {
+      "id": "long_01",
+      "category": "longer_sentences",
+      "text": "Bugün hava biraz yağmurlu olduğu için dışarı çıkmak yerine evde kalıp kod yazmaya karar verdim."
+    },
+    {
+      "id": "question_01",
+      "category": "questions",
+      "text": "Yarın saat kaçta buluşuyoruz, plan belli oldu mu?"
+    },
+    {
+      "id": "exclamation_01",
+      "category": "exclamations",
+      "text": "Harika bir haber bu, gerçekten çok sevindim!"
+    },
+    {
+      "id": "numeric_date_time",
+      "category": "numeric_values",
+      "text": "15 Mart 2026 tarihinde saat 14:30'da toplantımız başlayacak."
+    },
+    {
+      "id": "numeric_currency_percent",
+      "category": "numeric_values",
+      "text": "Fiyatı 250,50 TL olmuş, yani yaklaşık %20 zam gelmiş."
+    },
+    {
+      "id": "numeric_currency_major",
+      "category": "numeric_values",
+      "text": "Hesabına tam 100.000 TL nakit transfer ettim, 50 $ da cebimde kaldı."
+    },
+    {
+      "id": "numeric_phone_mobile",
+      "category": "numeric_values",
+      "text": "Beni bu numaradan arayabilirsin: 0555 123 45 67 veya +90 532 111 22 33."
+    },
+    {
+      "id": "numeric_phone_corp",
+      "category": "numeric_values",
+      "text": "Müşteri hizmetlerine 444 0 444 üzerinden ulaşabilirsiniz."
+    },
+    {
+      "id": "numeric_otp_code",
+      "category": "numeric_values",
+      "text": "Giriş için onay kodu: 582910, şifre: 4829 olarak belirlendi."
+    },
+    {
+      "id": "numeric_separated_digits",
+      "category": "numeric_values",
+      "text": "Geriye doğru sayıyoruz: 5 4 3 2 1, yayın başladı."
+    },
+    {
+      "id": "numeric_version_ip",
+      "category": "numeric_values",
+      "text": "Sunucu v1.2.7 sürümüne güncellendi, yeni IP adresi 192.168.1.1 oldu."
+    },
+    {
+      "id": "numeric_units_measurement",
+      "category": "numeric_values",
+      "text": "Sanal makineye 30 GB disk verdik, hava şu an 25 °C ve mesafe yaklaşık 10 km."
+    },
+    {
+      "id": "numeric_decimal_precision",
+      "category": "numeric_values",
+      "text": "Sensör değeri 1,5 kg ve hassas ölçüm 3,14 olarak kaydedildi."
+    },
+    {
+      "id": "numeric_natural_fraction",
+      "category": "numeric_values",
+      "text": "Pazardan 1,5 kg elma, marketten 0,5 litre süt aldım ve 2,5 saat yürüdüm."
+    },
+    {
+      "id": "numeric_fraction_counterexample",
+      "category": "numeric_values",
+      "text": "Hassas tartıda 1,3 kg çıktı, komisyon oranı ise %1,5 olarak kaldı."
+    },
+    {
+      "id": "numeric_duration_quarter",
+      "category": "numeric_values",
+      "text": "Toplantı 1,25 saat sürdü, eve dönüş yolculuğu yaklaşık 0,5 saat sürer."
+    },
+    {
+      "id": "numeric_identifiers_serial",
+      "category": "numeric_values",
+      "text": "Kargo takip no: 12345678 ve seri no: 948271 ile sisteme kayıt yapıldı."
+    },
+    {
+      "id": "english_natural_fractions",
+      "category": "english_secondary",
+      "text": "We walked 1.5 km in 2.5 hours and drank 0.5 liter of water."
+    },
+    {
+      "id": "proper_nouns",
+      "category": "proper_nouns",
+      "text": "Ahmet, Zeynep, Çağatay ve Şeyma ile Kadıköy'de buluştuk."
+    },
+    {
+      "id": "special_chars_01",
+      "category": "turkish_phonemes",
+      "text": "Ilık süt içerken, ışıltılı gökyüzüne bakıp çiğdem çıtlatıyoruz."
+    },
+    {
+      "id": "special_chars_02",
+      "category": "turkish_phonemes",
+      "text": "Şüpheli çanta köprü altında bulundu, görevliler önlem aldı."
+    },
+    {
+      "id": "abbrev_and_handles",
+      "category": "abbreviations_and_web",
+      "text": "github.com adresinden repoya bakabilirsin, kullanıcı adım @kemal_dev."
+    },
+    {
+      "id": "gaming_codeswitching",
+      "category": "gaming_and_tech",
+      "text": "Mid lane push yapalım, ulti hazır olunca fight başlatırız."
+    },
+    {
+      "id": "code_switching_tech",
+      "category": "code_switching",
+      "text": "Cache'i invalidate edip worker'ı restart ettim, latency baya düştü."
+    },
+    {
+      "id": "english_01",
+      "category": "english_secondary",
+      "text": "Hello! Voice cloning is working directly on Apple Silicon."
+    },
+    {
+      "id": "english_02",
+      "category": "english_secondary",
+      "text": "I will be back in five minutes, let me grab some water."
+    }
+  ]
+}
