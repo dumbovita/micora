@@ -8,30 +8,37 @@ struct ContentView: View {
     @ObservedObject var appState: AppState
     @FocusState private var isFieldFocused: Bool
 
+    private var currentVoiceName: String {
+        appState.profiles.first(where: { $0.id == appState.selectedProfileId })?.name ?? "Default Voice"
+    }
+
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 14) {
             // Header Bar
             headerBar
 
+            // Virtual Microphone Warning Banner (if BlackHole not active)
             if !appState.isVirtualMicAvailable {
                 virtualMicBanner
             }
 
-            Divider()
+            // Error Banner (if any)
+            if let error = appState.lastError {
+                errorBanner(error)
+            }
 
-            // Main Message Input Card
-            inputCard
+            // Main Message Composer (Hero Card)
+            composerCard
 
-            // Secondary Controls Bar (Voice, Queue Mode, Monitor)
-            controlsBar
+            // Secondary Controls Deck (Voice, Engine, Queue Behavior, Monitor)
+            controlsDeck
 
-            Divider()
-
-            // Real-Time Message Queue
+            // Real-Time Speech Queue
             queueSection
         }
         .padding(18)
-        .frame(minWidth: 720, minHeight: 520)
+        .frame(minWidth: 720, minHeight: 560)
+        .background(Color(nsColor: .windowBackgroundColor))
         .onAppear {
             NSApp.activate(ignoringOtherApps: true)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -92,215 +99,458 @@ struct ContentView: View {
     // MARK: - Header Bar
 
     private var headerBar: some View {
-        HStack(alignment: .center) {
-            HStack(spacing: 8) {
-                Image(systemName: "waveform.circle.fill")
-                    .font(.system(size: 28))
-                    .foregroundStyle(.blue)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Micora")
-                        .font(.title3)
-                        .fontWeight(.bold)
+        HStack(alignment: .center, spacing: 12) {
+            // Brand Logo & Title
+            HStack(spacing: 10) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.blue, Color.cyan],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 32, height: 32)
+                    Image(systemName: "waveform")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+
+                VStack(alignment: .leading, spacing: 1) {
+                    HStack(spacing: 6) {
+                        Text("Micora")
+                            .font(.system(size: 16, weight: .bold))
+                        Text("v1.0")
+                            .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 1)
+                            .background(Color.primary.opacity(0.06))
+                            .foregroundStyle(.secondary)
+                            .clipShape(Capsule())
+                    }
                     Text("Local-First Virtual Microphone TTS")
-                        .font(.caption2)
+                        .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                 }
             }
 
             Spacer()
 
-            // Output Target Badge
+            // Output Target Badge Button (Clickable -> Opens Audio Setup Sheet)
             Button(action: {
                 appState.showingVirtualMicSetup = true
             }) {
-                HStack(spacing: 6) {
+                HStack(spacing: 7) {
+                    Circle()
+                        .fill(appState.isVirtualMicAvailable ? Color.green : Color.orange)
+                        .frame(width: 7, height: 7)
                     Image(systemName: appState.isVirtualMicAvailable ? "mic.fill" : "speaker.wave.2.fill")
-                        .font(.caption)
+                        .font(.system(size: 11))
                         .foregroundStyle(appState.isVirtualMicAvailable ? .green : .orange)
-                    Text(appState.primaryDeviceName)
-                        .font(.caption)
-                        .fontWeight(.medium)
+                    Text(appState.isVirtualMicAvailable ? "Virtual Mic: BlackHole" : appState.primaryDeviceName)
+                        .font(.system(size: 12, weight: .medium))
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(.tertiary)
                 }
                 .padding(.horizontal, 10)
-                .padding(.vertical, 5)
+                .padding(.vertical, 6)
                 .background(Color(nsColor: .controlBackgroundColor))
-                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .clipShape(Capsule())
                 .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(appState.isVirtualMicAvailable ? Color(nsColor: .separatorColor) : Color.orange.opacity(0.6), lineWidth: 0.5)
+                    Capsule()
+                        .stroke(appState.isVirtualMicAvailable ? Color(nsColor: .separatorColor).opacity(0.6) : Color.orange.opacity(0.5), lineWidth: 0.8)
                 )
             }
             .buttonStyle(.plain)
-            .help("Click to configure audio output or view virtual microphone setup")
+            .help("Configure audio output or view virtual microphone setup")
 
-            // Worker State Indicator
+            // Worker State Badge
             HStack(spacing: 6) {
-                Circle()
-                    .fill(appState.isWorkerReady ? Color.green : Color.orange)
-                    .frame(width: 8, height: 8)
+                if !appState.isWorkerReady || appState.isSwitchingMode || appState.isScanningDataset || appState.isImportingHf {
+                    ProgressView()
+                        .controlSize(.mini)
+                } else {
+                    Circle()
+                        .fill(Color.green)
+                        .frame(width: 7, height: 7)
+                }
                 Text(appState.workerState)
-                    .font(.caption)
+                    .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }
             .padding(.horizontal, 10)
-            .padding(.vertical, 5)
+            .padding(.vertical, 6)
             .background(Color(nsColor: .controlBackgroundColor))
-            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .clipShape(Capsule())
             .overlay(
-                RoundedRectangle(cornerRadius: 6)
-                    .stroke(Color(nsColor: .separatorColor), lineWidth: 0.5)
+                Capsule()
+                    .stroke(Color(nsColor: .separatorColor).opacity(0.6), lineWidth: 0.8)
             )
         }
     }
 
-    // MARK: - Input Card
+    // MARK: - Virtual Microphone Banner
 
-    private var inputCard: some View {
-        HStack(alignment: .center, spacing: 10) {
-            TextField(
-                "Type a message in Turkish or English and press Enter to speak...",
-                text: $appState.inputText
-            )
-            .textFieldStyle(.roundedBorder)
-            .controlSize(.large)
-            .font(.system(size: 14))
-            .focused($isFieldFocused)
-            .onSubmit {
-                appState.submit()
+    private var virtualMicBanner: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(Color.orange.opacity(0.2))
+                    .frame(width: 28, height: 28)
+                Image(systemName: "mic.slash.fill")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(.orange)
             }
 
-            // Action Buttons
-            HStack(spacing: 8) {
-                Button(action: {
-                    appState.submit()
-                }) {
-                    Label("Speak", systemImage: "arrow.up.circle.fill")
-                        .font(.headline)
-                        .frame(width: 85, height: 28)
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .disabled(!appState.isWorkerReady || appState.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-
-                Button(action: {
-                    appState.stop()
-                }) {
-                    Label("Stop", systemImage: "stop.fill")
-                        .font(.headline)
-                        .frame(width: 75, height: 28)
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.large)
-                .tint(.red)
-                .keyboardShortcut(".", modifiers: [.command])
-                .disabled(!appState.isSpeakingOrGenerating)
-            }
-        }
-        .padding(.vertical, 4)
-    }
-
-    // MARK: - Controls Bar
-
-    private var controlsBar: some View {
-        HStack(spacing: 16) {
-            // Voice Profile Selector
-            HStack(spacing: 6) {
-                Text("Voice:")
-                    .font(.caption)
-                    .fontWeight(.medium)
-                Picker("", selection: Binding(
-                    get: { appState.selectedProfileId },
-                    set: { appState.selectVoiceProfile(id: $0) }
-                )) {
-                    ForEach(appState.profiles) { profile in
-                        Text(profile.name).tag(profile.id)
-                    }
-                }
-                .labelsHidden()
-                .frame(width: 170)
-
-                Menu {
-                    Button("Import Audio File (.wav)...") {
-                        appState.showingFileImporter = true
-                    }
-                    Button("Import Voice Dataset Folder...") {
-                        appState.showingFolderImporter = true
-                    }
-                    Button("Import from YouTube or Hugging Face...") {
-                        appState.hfRepoInput = ""
-                        appState.showingHfImporter = true
-                    }
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.caption)
-                }
-                .menuStyle(.borderlessButton)
-                .frame(width: 20)
-                .help("Add voice profile from single audio file or folder dataset")
-            }
-
-            // Mode Selector (Efficient vs Natural)
-            HStack(spacing: 6) {
-                Text("Mode:")
-                    .font(.caption)
-                    .fontWeight(.medium)
-                Picker("", selection: Binding(
-                    get: { appState.synthesisMode },
-                    set: { mode in
-                        Task {
-                            await appState.setSynthesisMode(mode)
-                        }
-                    }
-                )) {
-                    ForEach(SynthesisMode.allCases) { mode in
-                        Text(mode.rawValue).tag(mode)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .frame(width: 135)
-                .disabled(appState.isSwitchingMode || !appState.isWorkerReady)
-            }
-
-            // Submission Behavior Selector
-            HStack(spacing: 6) {
-                Text("When Speaking:")
-                    .font(.caption)
-                    .fontWeight(.medium)
-                Picker("", selection: Binding(
-                    get: { appState.submissionBehavior },
-                    set: { appState.setSubmissionBehavior($0) }
-                )) {
-                    ForEach(SubmissionBehavior.allCases, id: \.self) { behavior in
-                        Text(behavior.rawValue).tag(behavior)
-                    }
-                }
-                .labelsHidden()
-                .frame(width: 170)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Virtual Microphone (BlackHole 2ch) Not Detected")
+                    .font(.system(size: 12, weight: .semibold))
+                Text("Audio is currently playing to physical speakers. To stream into Discord, Zoom, or games, install BlackHole 2ch.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
             }
 
             Spacer()
 
-            // Local Monitor Volume Slider
-            HStack(spacing: 6) {
-                Image(systemName: appState.monitorVolume > 0 ? "speaker.wave.1.fill" : "speaker.slash.fill")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Text("Monitor:")
-                    .font(.caption)
-                    .fontWeight(.medium)
-                Slider(
-                    value: Binding(
-                        get: { appState.monitorVolume },
-                        set: { appState.setMonitorVolume($0) }
-                    ),
-                    in: 0.0...1.0
-                )
-                .frame(width: 75)
-                Text("\(Int(appState.monitorVolume * 100))%")
-                    .font(.caption2)
-                    .monospacedDigit()
-                    .frame(width: 32, alignment: .trailing)
+            Button("Setup Guide") {
+                appState.showingVirtualMicSetup = true
             }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+            .tint(.orange)
+
+            Button(action: {
+                appState.refreshAudioDevices()
+            }) {
+                Image(systemName: "arrow.clockwise")
+                    .font(.caption)
+            }
+            .controlSize(.small)
+            .help("Check for BlackHole again")
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 9)
+        .background(Color.orange.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+        )
+    }
+
+    // MARK: - Error Banner
+
+    private func errorBanner(_ message: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 12))
+                .foregroundStyle(.red)
+
+            Text(message)
+                .font(.system(size: 12))
+                .foregroundStyle(.red)
+                .lineLimit(2)
+
+            Spacer()
+
+            Button(action: {
+                appState.lastError = nil
+            }) {
+                Image(systemName: "xmark")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Color.red.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color.red.opacity(0.3), lineWidth: 0.8)
+        )
+    }
+
+    // MARK: - Main Message Composer (Hero Card)
+
+    private var composerCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            // Input Text Field
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: "quote.bubble")
+                    .font(.system(size: 15))
+                    .foregroundStyle(Color.accentColor.opacity(0.8))
+                    .padding(.top, 3)
+
+                TextField(
+                    "Type a message in Turkish or English and press Enter to speak...",
+                    text: $appState.inputText,
+                    axis: .vertical
+                )
+                .lineLimit(1...4)
+                .textFieldStyle(.plain)
+                .font(.system(size: 14))
+                .focused($isFieldFocused)
+                .onSubmit {
+                    appState.submit()
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.top, 12)
+
+            Divider()
+                .opacity(0.4)
+
+            // Bottom Action Bar within Composer Card
+            HStack(alignment: .center) {
+                // Voice and Mode Context Tags
+                HStack(spacing: 6) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "person.wave.2.fill")
+                            .font(.system(size: 10))
+                        Text(currentVoiceName)
+                            .font(.system(size: 11, weight: .medium))
+                    }
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Color.primary.opacity(0.05))
+                    .clipShape(Capsule())
+
+                    Text(appState.synthesisMode == .efficient ? "⚡ MOSS" : "🎙️ Chatterbox")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(appState.synthesisMode == .efficient ? Color.blue : Color.purple)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(
+                            (appState.synthesisMode == .efficient ? Color.blue : Color.purple).opacity(0.12)
+                        )
+                        .clipShape(Capsule())
+                }
+
+                Spacer()
+
+                // Keyboard Shortcut Hints
+                Text("↵ to Speak")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .padding(.trailing, 6)
+
+                // Action Buttons
+                HStack(spacing: 8) {
+                    if appState.isSpeakingOrGenerating {
+                        Button(action: {
+                            appState.stop()
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "stop.fill")
+                                    .font(.system(size: 10, weight: .bold))
+                                Text("Stop")
+                                    .font(.system(size: 12, weight: .semibold))
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Color.red.opacity(0.15))
+                            .foregroundStyle(.red)
+                            .clipShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
+                        .keyboardShortcut(".", modifiers: [.command])
+                        .help("Stop active speech (⌘.)")
+                    }
+
+                    Button(action: {
+                        appState.submit()
+                    }) {
+                        HStack(spacing: 5) {
+                            Image(systemName: "arrow.up.circle.fill")
+                                .font(.system(size: 13, weight: .semibold))
+                            Text("Speak")
+                                .font(.system(size: 13, weight: .semibold))
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 5)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.regular)
+                    .clipShape(Capsule())
+                    .disabled(!appState.isWorkerReady || appState.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.bottom, 10)
+        }
+        .background(Color(nsColor: .controlBackgroundColor))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(isFieldFocused ? Color.accentColor.opacity(0.6) : Color(nsColor: .separatorColor).opacity(0.6), lineWidth: isFieldFocused ? 1.5 : 0.8)
+        )
+        .shadow(color: Color.black.opacity(0.03), radius: 3, x: 0, y: 1)
+    }
+
+    // MARK: - Secondary Controls Deck (2 Clean Cards)
+
+    private var controlsDeck: some View {
+        HStack(spacing: 12) {
+            // Card 1: Voice & Model
+            HStack(spacing: 10) {
+                // Voice Profile Selector + Add Button
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("VOICE PROFILE")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.secondary)
+
+                    HStack(spacing: 6) {
+                        Picker("", selection: Binding(
+                            get: { appState.selectedProfileId },
+                            set: { appState.selectVoiceProfile(id: $0) }
+                        )) {
+                            ForEach(appState.profiles) { profile in
+                                Text(profile.name).tag(profile.id)
+                            }
+                        }
+                        .labelsHidden()
+                        .frame(minWidth: 140, maxWidth: .infinity)
+
+                        Menu {
+                            Button {
+                                appState.showingFileImporter = true
+                            } label: {
+                                Label("Import Audio File (.wav)...", systemImage: "doc.badge.plus")
+                            }
+                            Button {
+                                appState.showingFolderImporter = true
+                            } label: {
+                                Label("Import Voice Dataset Folder...", systemImage: "folder.badge.plus")
+                            }
+                            Button {
+                                appState.hfRepoInput = ""
+                                appState.showingHfImporter = true
+                            } label: {
+                                Label("Import from YouTube or Hugging Face...", systemImage: "globe")
+                            }
+                        } label: {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 16))
+                                .foregroundStyle(Color.accentColor)
+                        }
+                        .menuStyle(.borderlessButton)
+                        .frame(width: 20)
+                        .help("Add voice profile from audio file, folder dataset, or online link")
+                    }
+                }
+                .frame(maxWidth: .infinity)
+
+                Divider()
+                    .frame(height: 32)
+                    .opacity(0.5)
+
+                // Synthesis Engine Mode Selector
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("SYNTHESIS ENGINE")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.secondary)
+
+                    Picker("", selection: Binding(
+                        get: { appState.synthesisMode },
+                        set: { mode in
+                            Task {
+                                await appState.setSynthesisMode(mode)
+                            }
+                        }
+                    )) {
+                        Text("⚡ Efficient").tag(SynthesisMode.efficient)
+                        Text("🎙️ Natural").tag(SynthesisMode.natural)
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 160)
+                    .disabled(appState.isSwitchingMode || !appState.isWorkerReady)
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(Color(nsColor: .controlBackgroundColor).opacity(0.7))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(Color(nsColor: .separatorColor).opacity(0.5), lineWidth: 0.8)
+            )
+
+            // Card 2: When Speaking Behavior & Local Monitor
+            HStack(spacing: 12) {
+                // When Speaking Behavior
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("WHEN SPEAKING")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.secondary)
+
+                    Picker("", selection: Binding(
+                        get: { appState.submissionBehavior },
+                        set: { appState.setSubmissionBehavior($0) }
+                    )) {
+                        ForEach(SubmissionBehavior.allCases, id: \.self) { behavior in
+                            Text(behavior.rawValue).tag(behavior)
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(width: 145)
+                }
+
+                Divider()
+                    .frame(height: 32)
+                    .opacity(0.5)
+
+                // Local Monitor Volume
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 4) {
+                        Text("LOCAL MONITOR")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text("\(Int(appState.monitorVolume * 100))%")
+                            .font(.system(size: 10, weight: .medium, design: .monospaced))
+                            .foregroundStyle(.secondary)
+                    }
+
+                    HStack(spacing: 6) {
+                        Button(action: {
+                            if appState.monitorVolume > 0 {
+                                appState.setMonitorVolume(0)
+                            } else {
+                                appState.setMonitorVolume(0.2)
+                            }
+                        }) {
+                            Image(systemName: appState.monitorVolume > 0 ? "speaker.wave.2.fill" : "speaker.slash.fill")
+                                .font(.system(size: 12))
+                                .foregroundStyle(appState.monitorVolume > 0 ? Color.primary : Color.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .help(appState.monitorVolume > 0 ? "Mute local monitor" : "Unmute local monitor")
+
+                        Slider(
+                            value: Binding(
+                                get: { appState.monitorVolume },
+                                set: { appState.setMonitorVolume($0) }
+                            ),
+                            in: 0.0...1.0
+                        )
+                        .frame(width: 75)
+                    }
+                }
+                .frame(minWidth: 125)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(Color(nsColor: .controlBackgroundColor).opacity(0.7))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(Color(nsColor: .separatorColor).opacity(0.5), lineWidth: 0.8)
+            )
         }
     }
 
@@ -308,99 +558,152 @@ struct ContentView: View {
 
     private var queueSection: some View {
         VStack(alignment: .leading, spacing: 8) {
+            // Queue Section Header
             HStack {
-                Text("Speech Queue")
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                if !appState.queueItems.isEmpty {
-                    Text("(\(appState.queueItems.count))")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                HStack(spacing: 6) {
+                    Text("Speech Queue")
+                        .font(.system(size: 13, weight: .semibold))
+
+                    if !appState.queueItems.isEmpty {
+                        Text("\(appState.queueItems.count)")
+                            .font(.system(size: 11, weight: .bold))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 1)
+                            .background(Color.accentColor.opacity(0.15))
+                            .foregroundStyle(Color.accentColor)
+                            .clipShape(Capsule())
+                    }
                 }
 
                 Spacer()
 
                 if !appState.queueItems.isEmpty {
-                    Button("Clear All") {
+                    Button(action: {
                         appState.clearQueue()
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "trash")
+                                .font(.caption2)
+                            Text("Clear All")
+                                .font(.caption)
+                        }
+                        .foregroundStyle(.secondary)
                     }
-                    .font(.caption)
                     .buttonStyle(.plain)
-                    .foregroundStyle(.secondary)
+                    .help("Clear completed and queued messages")
                 }
             }
 
+            // Queue Content
             if appState.queueItems.isEmpty {
-                VStack(spacing: 4) {
+                VStack(spacing: 6) {
                     Spacer()
-                    Image(systemName: "bubble.left.and.bubble.right")
-                        .font(.system(size: 24))
+                    Image(systemName: "waveform.and.mic")
+                        .font(.system(size: 28))
                         .foregroundStyle(.quaternary)
-                    Text("No messages in queue")
+                    Text("Ready to speak")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.secondary)
+                    Text("Type a message above and press Enter to stream through your virtual microphone.")
                         .font(.caption)
                         .foregroundStyle(.tertiary)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: 380)
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .background(Color(nsColor: .controlBackgroundColor).opacity(0.4))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color(nsColor: .separatorColor).opacity(0.3), lineWidth: 0.8)
+                )
             } else {
-                List {
-                    ForEach(appState.queueItems) { item in
-                        queueItemRow(item)
+                ScrollView {
+                    LazyVStack(spacing: 6) {
+                        ForEach(appState.queueItems) { item in
+                            queueItemCard(item)
+                        }
                     }
+                    .padding(4)
                 }
-                .listStyle(.inset(alternatesRowBackgrounds: true))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .background(Color(nsColor: .controlBackgroundColor).opacity(0.4))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color(nsColor: .separatorColor).opacity(0.35), lineWidth: 0.8)
+                )
             }
         }
     }
 
-    private func queueItemRow(_ item: QueueItem) -> some View {
+    private func queueItemCard(_ item: QueueItem) -> some View {
         HStack(alignment: .center, spacing: 10) {
-            switch item.state {
-            case .queued:
-                Image(systemName: "clock")
-                    .foregroundStyle(.secondary)
-                    .frame(width: 16)
-            case .generating:
-                ProgressView()
-                    .controlSize(.mini)
-                    .frame(width: 16)
-            case .speaking:
-                Image(systemName: "waveform")
-                    .foregroundStyle(.green)
-                    .frame(width: 16)
-            case .completed:
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(.secondary)
-                    .frame(width: 16)
-            case .cancelled:
-                Image(systemName: "minus.circle")
-                    .foregroundStyle(.red)
-                    .frame(width: 16)
-            case .failed:
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundStyle(.yellow)
-                    .frame(width: 16)
+            // Status Icon / Visual Indicator
+            ZStack {
+                Circle()
+                    .fill(badgeColor(for: item.state).opacity(0.12))
+                    .frame(width: 26, height: 26)
+
+                switch item.state {
+                case .queued:
+                    Image(systemName: "clock")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                case .generating:
+                    ProgressView()
+                        .controlSize(.mini)
+                case .speaking:
+                    Image(systemName: "waveform")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.green)
+                case .completed:
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(.secondary)
+                case .cancelled:
+                    Image(systemName: "minus.circle")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.red)
+                case .failed:
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.orange)
+                }
             }
 
+            // Message Text
             Text(item.text)
-                .font(.body)
-                .lineLimit(1)
+                .font(.system(size: 13))
+                .lineLimit(2)
                 .foregroundStyle(item.state == .cancelled ? .secondary : .primary)
 
             Spacer()
 
-            Text(item.state.rawValue.capitalized)
-                .font(.caption2)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 2)
-                .background(badgeColor(for: item.state).opacity(0.15))
-                .foregroundStyle(badgeColor(for: item.state))
-                .clipShape(Capsule())
+            // State Badge Capsule
+            HStack(spacing: 4) {
+                if item.state == .speaking {
+                    Circle()
+                        .fill(Color.green)
+                        .frame(width: 5, height: 5)
+                }
+                Text(item.state.rawValue.capitalized)
+                    .font(.system(size: 11, weight: .medium))
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(badgeColor(for: item.state).opacity(0.12))
+            .foregroundStyle(badgeColor(for: item.state))
+            .clipShape(Capsule())
         }
-        .padding(.vertical, 3)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
+        .background(Color(nsColor: .controlBackgroundColor))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(item.state == .speaking ? Color.green.opacity(0.4) : Color(nsColor: .separatorColor).opacity(0.3), lineWidth: item.state == .speaking ? 1.2 : 0.6)
+        )
     }
 
     private func badgeColor(for state: QueueItemState) -> Color {
@@ -418,21 +721,48 @@ struct ContentView: View {
 
     private var newVoiceSheet: some View {
         VStack(spacing: 16) {
-            Text("Add Voice Profile")
-                .font(.headline)
+            HStack(spacing: 10) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.blue.opacity(0.15))
+                        .frame(width: 36, height: 36)
+                    Image(systemName: "mic.badge.plus")
+                        .font(.system(size: 18))
+                        .foregroundStyle(.blue)
+                }
 
-            VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Add Voice Profile")
+                        .font(.headline)
+                    Text("Create a new cloned voice from an audio reference file")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
                 Text("Voice Name:")
                     .font(.caption)
+                    .fontWeight(.medium)
                 TextField("e.g. My Voice", text: $appState.newVoiceName)
                     .textFieldStyle(.roundedBorder)
 
                 if let url = appState.pendingVoiceURL {
-                    Text("Audio File: \(url.lastPathComponent)")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 6) {
+                        Image(systemName: "waveform")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                        Text("Source: \(url.lastPathComponent)")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.top, 2)
                 }
             }
+            .padding(12)
+            .background(Color(nsColor: .controlBackgroundColor))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
 
             HStack {
                 Button("Cancel") {
@@ -440,6 +770,8 @@ struct ContentView: View {
                     appState.pendingVoiceURL = nil
                 }
                 .keyboardShortcut(.cancelAction)
+
+                Spacer()
 
                 Button("Add Voice") {
                     if let url = appState.pendingVoiceURL {
@@ -455,24 +787,52 @@ struct ContentView: View {
                 .disabled(appState.newVoiceName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
         }
-        .padding(24)
-        .frame(width: 320)
+        .padding(22)
+        .frame(width: 360)
     }
 
     // MARK: - Dataset Candidates Sheet
 
     private var datasetCandidatesSheet: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Import Voice Dataset")
-                .font(.headline)
+            HStack(spacing: 10) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.purple.opacity(0.15))
+                        .frame(width: 36, height: 36)
+                    Image(systemName: "folder.badge.gearshape")
+                        .font(.system(size: 18))
+                        .foregroundStyle(.purple)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Import Voice Dataset")
+                        .font(.headline)
+                    Text("Select the cleanest reference audio candidate from your folder")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+            }
 
             if let res = appState.datasetScanResult {
-                HStack {
-                    Text("Scanned \(res.total_files ?? 0) files: \(res.usable_count ?? 0) usable, \(res.rejected_count ?? 0) rejected")
+                HStack(spacing: 12) {
+                    Label("\(res.total_files ?? 0) Files Scanned", systemImage: "doc.on.doc")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text("•").foregroundStyle(.tertiary)
+                    Label("\(res.usable_count ?? 0) Usable", systemImage: "checkmark.circle")
+                        .font(.caption)
+                        .foregroundStyle(.green)
+                    Text("•").foregroundStyle(.tertiary)
+                    Label("\(res.rejected_count ?? 0) Filtered", systemImage: "xmark.circle")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Spacer()
                 }
+                .padding(8)
+                .background(Color(nsColor: .controlBackgroundColor))
+                .clipShape(RoundedRectangle(cornerRadius: 6))
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Voice Profile Name:")
@@ -482,7 +842,7 @@ struct ContentView: View {
                         .textFieldStyle(.roundedBorder)
                 }
 
-                Text("Select Reference Candidate (Top Clean Speech Segments):")
+                Text("Select Reference Candidate (Top Speech Segments):")
                     .font(.caption)
                     .fontWeight(.medium)
 
@@ -526,7 +886,7 @@ struct ContentView: View {
             .padding(.top, 4)
         }
         .padding(20)
-        .frame(width: 500)
+        .frame(width: 520)
     }
 
     private func candidateRow(_ candidate: DatasetCandidate) -> some View {
@@ -534,22 +894,22 @@ struct ContentView: View {
         return Button(action: {
             appState.selectedCandidatePath = candidate.effectiveReferencePath
         }) {
-            HStack {
+            HStack(spacing: 10) {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 14))
                     .foregroundStyle(isSelected ? .blue : .secondary)
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 3) {
                     Text(candidate.filename)
-                        .font(.caption)
-                        .fontWeight(.medium)
+                        .font(.system(size: 12, weight: .medium))
                         .lineLimit(1)
                     HStack(spacing: 8) {
                         Text("\(String(format: "%.1f", candidate.duration_sec))s")
                         Text("Speech: \(Int(candidate.speech_ratio * 100))%")
-                        Text("Peak: \(String(format: "%.1f", candidate.peak_db)) dBFS")
-                        Text("RMS: \(String(format: "%.1f", candidate.rms_db)) dBFS")
+                        Text("Peak: \(String(format: "%.1f", candidate.peak_db)) dB")
+                        Text("RMS: \(String(format: "%.1f", candidate.rms_db)) dB")
                     }
-                    .font(.caption2)
+                    .font(.system(size: 10))
                     .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -559,25 +919,38 @@ struct ContentView: View {
             .clipShape(RoundedRectangle(cornerRadius: 6))
             .overlay(
                 RoundedRectangle(cornerRadius: 6)
-                    .stroke(isSelected ? Color.blue : Color(nsColor: .separatorColor), lineWidth: isSelected ? 1.5 : 0.5)
+                    .stroke(isSelected ? Color.blue : Color(nsColor: .separatorColor).opacity(0.5), lineWidth: isSelected ? 1.5 : 0.6)
             )
         }
         .buttonStyle(.plain)
     }
 
-    // MARK: - Hugging Face Import Sheet
+    // MARK: - Hugging Face / YouTube Import Sheet
 
     private var hfImportSheet: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Import Voice from YouTube or Hugging Face")
-                .font(.headline)
+            HStack(spacing: 10) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.red.opacity(0.12))
+                        .frame(width: 36, height: 36)
+                    Image(systemName: "globe")
+                        .font(.system(size: 18))
+                        .foregroundStyle(.red)
+                }
 
-            Text("Paste a YouTube video link (e.g. https://youtu.be/...) or a Hugging Face dataset. Micora will automatically download the audio, isolate the cleanest speech segment, and create your voice profile.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Import from YouTube or Hugging Face")
+                        .font(.headline)
+                    Text("Automatically downloads, extracts, and isolates clean speech")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+            }
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("YouTube URL or Hugging Face Dataset:")
+                Text("URL or Dataset Identifier:")
                     .font(.caption)
                     .fontWeight(.medium)
                 TextField("e.g. https://www.youtube.com/watch?v=... or ailabturkiye/cemyilmaz", text: $appState.hfRepoInput)
@@ -616,64 +989,28 @@ struct ContentView: View {
             .padding(.top, 4)
         }
         .padding(20)
-        .frame(width: 480)
+        .frame(width: 500)
     }
 
-    // MARK: - Virtual Microphone Banner & Setup Sheet
-
-    private var virtualMicBanner: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 16))
-                .foregroundStyle(.orange)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Virtual Microphone (BlackHole) Not Detected")
-                    .font(.caption)
-                    .fontWeight(.bold)
-                Text("Speech is currently playing to physical speakers/headphones. To use Micora in Discord, Zoom, or games, install BlackHole 2ch.")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            Button("Setup Guide") {
-                appState.showingVirtualMicSetup = true
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.small)
-            .tint(.orange)
-
-            Button(action: {
-                appState.refreshAudioDevices()
-            }) {
-                Image(systemName: "arrow.clockwise")
-            }
-            .controlSize(.small)
-            .help("Check for BlackHole again")
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(Color.orange.opacity(0.12))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(Color.orange.opacity(0.35), lineWidth: 1)
-        )
-    }
+    // MARK: - Virtual Microphone & Audio Routing Setup Sheet
 
     private var virtualMicSetupSheet: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Image(systemName: appState.isVirtualMicAvailable ? "mic.fill" : "mic.badge.xmark")
-                    .font(.title2)
-                    .foregroundStyle(appState.isVirtualMicAvailable ? .green : .orange)
+            HStack(spacing: 10) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(appState.isVirtualMicAvailable ? Color.green.opacity(0.15) : Color.orange.opacity(0.15))
+                        .frame(width: 36, height: 36)
+                    Image(systemName: appState.isVirtualMicAvailable ? "mic.fill" : "mic.badge.xmark")
+                        .font(.system(size: 18))
+                        .foregroundStyle(appState.isVirtualMicAvailable ? .green : .orange)
+                }
+
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Virtual Microphone & Audio Routing")
                         .font(.headline)
-                    Text(appState.isVirtualMicAvailable ? "BlackHole 2ch is active and ready." : "BlackHole 2ch driver is required to act as a virtual microphone.")
-                        .font(.caption)
+                    Text(appState.isVirtualMicAvailable ? "BlackHole 2ch is active and ready for live calls." : "BlackHole 2ch is required to act as a virtual microphone in other apps.")
+                        .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -725,7 +1062,7 @@ struct ContentView: View {
                     Label("BlackHole 2ch is detected and active!", systemImage: "checkmark.circle.fill")
                         .font(.subheadline)
                         .foregroundStyle(.green)
-                    Text("In your voice chat app (Discord, Zoom, etc.), select **BlackHole 2ch** as your Input Device (Microphone). Anything spoken in Micora will stream directly into the call.")
+                    Text("In your voice chat app (Discord, Zoom, etc.), select **BlackHole 2ch** as your Input Device (Microphone). Anything spoken in Micora will stream directly into your call.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -771,7 +1108,6 @@ struct ContentView: View {
             .padding(.top, 4)
         }
         .padding(22)
-        .frame(width: 500)
+        .frame(width: 520)
     }
 }
-

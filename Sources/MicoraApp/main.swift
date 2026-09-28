@@ -15,7 +15,7 @@ struct MicoraApp: App {
         }
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unified)
-        .defaultSize(width: 660, height: 540)
+        .defaultSize(width: 760, height: 600)
         .commands {
             CommandGroup(replacing: .appInfo) {
                 Button("About Micora") {
