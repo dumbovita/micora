@@ -34,6 +34,11 @@ def int_to_turkish(n: int) -> str:
     if n == 0:
         return "sıfır"
 
+    s_abs = str(abs(n))
+    if len(s_abs) > 15:
+        prefix = "eksi " if n < 0 else ""
+        return prefix + digits_to_turkish(s_abs)
+
     units = ["", "bir", "iki", "üç", "dört", "beş", "altı", "yedi", "sekiz", "dokuz"]
     tens = ["", "on", "yirmi", "otuz", "kırk", "elli", "altmış", "yetmiş", "seksen", "doksan"]
     scales = [
@@ -91,6 +96,11 @@ def int_to_english(n: int) -> str:
     """Convert an integer to natural English spoken cardinal words."""
     if n == 0:
         return "zero"
+
+    s_abs = str(abs(n))
+    if len(s_abs) > 15:
+        prefix = "minus " if n < 0 else ""
+        return prefix + digits_to_english(s_abs)
 
     units = [
         "", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",

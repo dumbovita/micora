@@ -428,12 +428,13 @@ class MicoraWorkerServer:
         voice_id: str,
         flow_control: bool = False,
     ) -> None:
-        text = normalize_text_for_tts(text)
-        logger.info("Starting synthesis [req=%s]: \"%s\"", request_id, text)
         t_start = time.perf_counter()
         first_chunk_sent = False
 
         try:
+            text = normalize_text_for_tts(text)
+            logger.info("Starting synthesis [req=%s]: \"%s\"", request_id, text)
+
             # Resolve voice state
             voice_state = self.voice_cache.get(voice_id)
 
